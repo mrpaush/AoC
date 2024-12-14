@@ -9,6 +9,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import static java.lang.Integer.parseInt;
+
 public class Main {
     public static void main(String[] args) throws Exception {
         long start = System.nanoTime();
@@ -21,25 +23,22 @@ public class Main {
 
     public static long day9part2() throws Exception {
         long answer = 0L;
-        String numbers = Files.readString(Paths.get("src/day9test.txt"));
+        String numbers = Files.readString(Paths.get("src/main/resources/day9.txt"));
 
         System.out.println(numbers);
 
         StringBuilder correctSize = new StringBuilder();
-        int originalListLength = numbers.length();
+        char[] charArray = numbers.toCharArray();
         HashMap<Integer, Integer> trackIdIndex = new HashMap<>();
-        int spaceCounter = 0;
-        for (int i = 0; i < originalListLength; i++) {
-            char currentChar = numbers.charAt(i);
-            int times = Integer.parseInt(String.valueOf(currentChar));
+        for (int i = 0; i < charArray.length; i++) {
+            char currentChar = charArray[i];
             if (i % 2 == 1) {
-                correctSize.append(".".repeat(times));
-                spaceCounter += times;
+                correctSize.append(".".repeat((int) currentChar));
             } else {
-                for (int j = 0; j < times; j++) {
+                for (int j = 0; j < (int) currentChar; j++) {
                     trackIdIndex.put(correctSize.length() + j, i / 2);
                 }
-                correctSize.append((String.valueOf((i / 2) % 10)).repeat(times));
+                correctSize.append((String.valueOf((i / 2) % 10)).repeat((int) currentChar));
             }
         }
 
@@ -366,6 +365,109 @@ public class Main {
         return answer;
     }
 
+    public static long day5part2(List<int[]> failedList, HashMap<Integer, int[]> numPair) throws Exception {
+        long answer = 0L;
+        for (int[] ints : failedList) {
+            for (int j = 0; j < ints.length; j++) {
+                for (int k = 0; k < ints.length; k++) {
+                    if (j < k) {
+                        if (numPair.containsKey(ints[k])) {
+                            int finalJ = j;
+                            if (Arrays.stream(numPair.get(ints[k])).anyMatch((e) -> e == ints[finalJ])) {
+                                int saveInt = ints[j];
+                                ints[j] = ints[k];
+                                ints[k] = saveInt;
+                            }
+                        }
+                    } else if (j > k) {
+                        if (numPair.containsKey(ints[j])) {
+                            int finalK = k;
+                            if (Arrays.stream(numPair.get(ints[j])).anyMatch((e) -> e == ints[finalK])) {
+                                int saveInt = ints[k];
+                                ints[k] = ints[j];
+                                ints[j] = saveInt;
+                            }
+                        }
+                    }
+                }
+            }
+            answer += ints[ints.length / 2];
+        }
+        return answer;
+    }
+
+
+    public static long day5part1() throws Exception {
+        long answer = 0L;
+        File file = new File("src/main/resources/day5.txt");
+        BufferedReader br = new BufferedReader(new FileReader(file));
+        String line;
+        List<int[]> ruleList = new ArrayList<>();
+        List<int[]> checkList = new ArrayList<>();
+        while ((line = br.readLine()) != null) {
+            if (line.contains("|")) {
+                String[] parts = line.split("\\|");
+                int[] array = new int[]{
+                        Integer.parseInt(parts[0].trim()),
+                        Integer.parseInt(parts[1].trim())
+                };
+                ruleList.add(array);
+            } else if (line.contains(",")) {
+                String[] parts = line.split(",");
+                int[] array = new int[parts.length];
+                for (int i = 0; i < parts.length; i++) {
+                    array[i] = Integer.parseInt(parts[i].trim());
+                }
+                checkList.add(array);
+            }
+        }
+
+        HashMap<Integer, int[]> numPair = new HashMap<>();
+        for (int[] arr : ruleList) {
+            if (numPair.containsKey(arr[0])) {
+                int[] array = numPair.get(arr[0]);
+                int[] newArray = Arrays.copyOf(array, array.length + 1);
+                newArray[newArray.length - 1] = arr[1];
+                numPair.replace(arr[0], newArray);
+            } else {
+                numPair.put(arr[0], new int[]{arr[1]});
+            }
+        }
+        boolean badList = false;
+        List<int[]> failedList = new ArrayList<>();
+        for (int[] ints : checkList) {
+            badList = false;
+            for (int j = 0; j < ints.length; j++) {
+                if (badList) break;
+                for (int k = 0; k < ints.length; k++) {
+                    if (j < k) {
+                        if (numPair.containsKey(ints[k])) {
+                            int finalJ = j;
+                            if (Arrays.stream(numPair.get(ints[k])).anyMatch((e) -> e == ints[finalJ])) {
+                                badList = true;
+                                failedList.add(ints);
+                                break;
+                            }
+                        }
+                    } else if (j > k) {
+                        if (numPair.containsKey(ints[j])) {
+                            int finalK = k;
+                            if (Arrays.stream(numPair.get(ints[j])).anyMatch((e) -> e == ints[finalK])) {
+                                badList = true;
+                                failedList.add(ints);
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+            if (!badList) answer += ints[ints.length / 2];
+        }
+        System.out.println(answer);
+        System.out.println(day5part2(failedList, numPair));
+        return answer;
+    }
+
 
     public static long day4part2() throws Exception {
         long answer = 0L;
@@ -484,24 +586,28 @@ public class Main {
         return stringList;
     }
 
-    public static long day5part1() throws Exception {
-        String fileName = "src/day5.txt";
+    public static long day3part1() throws Exception {
         long answer = 0L;
-        File file = new File(fileName);
-        BufferedReader br = new BufferedReader(new FileReader(file));
-        String st;
-        List<String> listNumbers = new ArrayList<>();
-        HashMap<Integer, Integer[]> keyMap = new HashMap<>();
+        boolean count = true;
+        List<String> mulList = fileRead("day3part1.txt");
 
-        while ((st = br.readLine()) != null) {
-            listNumbers.add(st);
-        }
-        for (int i = 0; i < listNumbers.size(); i++) {
-            if (listNumbers.get(i).contains("|")) {
-
+        for (int i = 0; i < mulList.size(); i++) {
+            if (mulList.get(i).contains("do()")) {
+                count = true;
+            } else if (mulList.get(i).contains("don't()")) {
+                count = false;
+            } else {
+                if (count == true) {
+                    int firstNumberStart = mulList.get(i).indexOf("(") + 1;
+                    int firstNumberEnd = mulList.get(i).indexOf(",");
+                    int secondNumberStart = mulList.get(i).indexOf(",") + 1;
+                    int secondNumberEnd = mulList.get(i).indexOf(")");
+                    int firstNumber = parseInt(mulList.get(i).substring(firstNumberStart, firstNumberEnd));
+                    int secondNumber = parseInt(mulList.get(i).substring(secondNumberStart, secondNumberEnd));
+                    answer += (long) firstNumber * secondNumber;
+                }
             }
         }
-        System.out.println(listNumbers);
         return answer;
     }
 
@@ -590,5 +696,59 @@ public class Main {
             }
         });
         return answer.get();
+    }
+
+    public static long day1part2() throws Exception {
+        long answer = 0;
+        File file = new File("src/main/resources/input.txt");
+        BufferedReader br = new BufferedReader((new FileReader(file)));
+        String st;
+        ArrayList<Integer> stringList1 = new ArrayList<>();
+        ArrayList<Integer> stringList2 = new ArrayList<>();
+        while ((st = br.readLine()) != null) {
+            stringList1.add(Integer.valueOf(st.split("\\s+")[0]));
+            stringList2.add(Integer.valueOf(st.split("\\s+")[1]));
+        }
+        stringList1.sort(Integer::compareTo);
+        stringList2.sort(Integer::compareTo);
+        HashMap<Integer, Integer> answerMap = new HashMap<>();
+        for (int i = 0; i < stringList1.size(); i++) {
+//            if (answerMap.containsKey(stringList1.get(i))) {
+//                answerMap.replace(stringList1.get(i), answerMap.get(i)+1);
+//            } else {
+            answerMap.put(stringList1.get(i), 0);
+//            }
+        }
+        for (int i = 0; i < stringList2.size(); i++) {
+            if (answerMap.containsKey(stringList2.get(i))) {
+                answerMap.replace(stringList2.get(i), answerMap.get(stringList2.get(i)) + 1);
+            }
+        }
+        for (Map.Entry<Integer, Integer> entry : answerMap.entrySet()) {
+            Integer key = entry.getKey();
+            Integer value = entry.getValue();
+            answer += (long) key * value;
+        }
+
+        return answer;
+    }
+
+    public Long day1part1() throws Exception {
+        File file = new File("src/main/resources/input.txt");
+        BufferedReader br = new BufferedReader((new FileReader(file)));
+        String st;
+        ArrayList<Integer> stringList1 = new ArrayList<>();
+        ArrayList<Integer> stringList2 = new ArrayList<>();
+        while ((st = br.readLine()) != null) {
+            stringList1.add(Integer.valueOf(st.split("\\s+")[0]));
+            stringList2.add(Integer.valueOf(st.split("\\s+")[1]));
+        }
+        stringList1.sort(Integer::compareTo);
+        stringList2.sort(Integer::compareTo);
+        Long answer = 0L;
+        for (int i = 0; i < stringList1.size(); i++) {
+            answer += Math.abs(stringList1.get(i) - stringList2.get(i));
+        }
+        return answer;
     }
 }

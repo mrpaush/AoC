@@ -1,7 +1,8 @@
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
-import java.sql.Array;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.regex.Matcher;
@@ -11,11 +12,115 @@ import java.util.stream.Collectors;
 public class Main {
     public static void main(String[] args) throws Exception {
         long start = System.nanoTime();
-        long answer = day6part2();
+        long answer = day9part2();
         long end = System.nanoTime();
 
         System.out.println(answer);
         System.out.println("Finished in " + (end - start) / 1000000.0 + "ms");
+    }
+
+    public static long day9part2() throws Exception {
+        long answer = 0L;
+        String numbers = Files.readString(Paths.get("src/day9test.txt"));
+
+        System.out.println(numbers);
+
+        StringBuilder correctSize = new StringBuilder();
+        int originalListLength = numbers.length();
+        HashMap<Integer, Integer> trackIdIndex = new HashMap<>();
+        int spaceCounter = 0;
+        for (int i = 0; i < originalListLength; i++) {
+            char currentChar = numbers.charAt(i);
+            int times = Integer.parseInt(String.valueOf(currentChar));
+            if (i % 2 == 1) {
+                correctSize.append(".".repeat(times));
+                spaceCounter += times;
+            } else {
+                for (int j = 0; j < times; j++) {
+                    trackIdIndex.put(correctSize.length() + j, i / 2);
+                }
+                correctSize.append((String.valueOf((i / 2) % 10)).repeat(times));
+            }
+        }
+
+        System.out.println(correctSize);
+        int firstSpaceIndex = correctSize.indexOf(".");
+
+        int finalSize = correctSize.length() - 1;
+        for (int i = finalSize; i > firstSpaceIndex; i--) {
+            char current = correctSize.charAt(i);
+            if (current != '.') {
+                int fileLength = 1;
+                while (i - fileLength >= 0 && correctSize.charAt(i - fileLength) == current) {
+                    fileLength++;
+                }
+                int fitIndex = correctSize.indexOf(".".repeat(fileLength));
+                if (fitIndex != -1 && fitIndex + fileLength-1 < i - fileLength+1) {
+                    correctSize.replace(fitIndex, fitIndex + fileLength, String.valueOf(current).repeat(fileLength));
+                    for (int j = 0; j < fileLength; j++) {
+                        trackIdIndex.put(fitIndex + j, trackIdIndex.get(i));
+                        trackIdIndex.remove(i);
+                        correctSize.replace(i, i + 1, ".");
+                        i--;
+                    }
+                    i++;
+                } else {
+                    for (int j = 0; j < fileLength - 1; j++) {
+                        i--;
+                    }
+                }
+            }
+        }
+
+        for (int i = 0; i < correctSize.length(); i++) {
+            if (correctSize.charAt(i) != '.') {
+                answer += trackIdIndex.get(i).longValue() * i;
+            }
+        }
+        System.out.println(correctSize);
+        return answer;
+    }
+
+    public static long day9part1() throws Exception {
+        long answer = 0L;
+        String numbers = Files.readString(Paths.get("src/day9.txt"));
+        StringBuilder correctSize = new StringBuilder();
+        int originalListLength = numbers.length();
+        HashMap<Integer, Integer> trackIdIndex = new HashMap<>();
+        int spaceCounter = 0;
+        for (int i = 0; i < originalListLength; i++) {
+            char currentChar = numbers.charAt(i);
+            int times = Integer.parseInt(String.valueOf(currentChar));
+            if (i % 2 == 1) {
+                correctSize.append(".".repeat(times));
+                spaceCounter += times;
+            } else {
+                for (int j = 0; j < times; j++) {
+                    trackIdIndex.put(correctSize.length() + j, i / 2);
+                }
+                correctSize.append((String.valueOf((i / 2) % 10)).repeat(times));
+            }
+        }
+        int finalSize = correctSize.length() - 1;
+        for (int i = finalSize; i > finalSize - spaceCounter; i--) {
+            char current = correctSize.charAt(i);
+            if (current == '.') {
+                correctSize.deleteCharAt(i);
+            } else {
+                int startAndEnd = correctSize.indexOf(".");
+                trackIdIndex.put(startAndEnd, trackIdIndex.get(i));
+                trackIdIndex.remove(i);
+                correctSize.replace(startAndEnd, startAndEnd + 1, String.valueOf(current));
+                correctSize.deleteCharAt(i);
+            }
+        }
+
+        for (int i = 0; i < correctSize.length(); i++) {
+            answer += trackIdIndex.get(i).longValue() * i;
+        }
+        System.out.println(numbers);
+        System.out.println(correctSize);
+        return answer;
     }
 
     public static long day6part2() throws Exception {

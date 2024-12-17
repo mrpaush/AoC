@@ -23,60 +23,23 @@ public class Main {
 
     public static long day9part2() throws Exception {
         long answer = 0L;
-        String numbers = Files.readString(Paths.get("src/main/resources/day9.txt"));
-
-        System.out.println(numbers);
-
-        StringBuilder correctSize = new StringBuilder();
-        char[] charArray = numbers.toCharArray();
-        HashMap<Integer, Integer> trackIdIndex = new HashMap<>();
-        for (int i = 0; i < charArray.length; i++) {
-            char currentChar = charArray[i];
-            if (i % 2 == 1) {
-                correctSize.append(".".repeat((int) currentChar));
-            } else {
-                for (int j = 0; j < (int) currentChar; j++) {
-                    trackIdIndex.put(correctSize.length() + j, i / 2);
-                }
-                correctSize.append((String.valueOf((i / 2) % 10)).repeat((int) currentChar));
+        String numbers = Files.readString(Paths.get("src/day9.txt"));
+        char[][] charArray = new char[numbers.length()][];
+        HashMap<Integer, char[][]> mapTest = new HashMap<>();
+        for (int i = 0; i < numbers.length(); i++) {
+            char currentChar = numbers.charAt(i);
+            charArray[i] = new char[(int) currentChar];
+            for (int j = 0; j < (int) currentChar; j++) {
+                if (i % 2 == 1) charArray[i][j] = '.';
+                else charArray[i][j] = (char) ((i / 2) % 10);
             }
         }
-
-        System.out.println(correctSize);
-        int firstSpaceIndex = correctSize.indexOf(".");
-
-        int finalSize = correctSize.length() - 1;
-        for (int i = finalSize; i > firstSpaceIndex; i--) {
-            char current = correctSize.charAt(i);
-            if (current != '.') {
-                int fileLength = 1;
-                while (i - fileLength >= 0 && correctSize.charAt(i - fileLength) == current) {
-                    fileLength++;
-                }
-                int fitIndex = correctSize.indexOf(".".repeat(fileLength));
-                if (fitIndex != -1 && fitIndex + fileLength-1 < i - fileLength+1) {
-                    correctSize.replace(fitIndex, fitIndex + fileLength, String.valueOf(current).repeat(fileLength));
-                    for (int j = 0; j < fileLength; j++) {
-                        trackIdIndex.put(fitIndex + j, trackIdIndex.get(i));
-                        trackIdIndex.remove(i);
-                        correctSize.replace(i, i + 1, ".");
-                        i--;
-                    }
-                    i++;
-                } else {
-                    for (int j = 0; j < fileLength - 1; j++) {
-                        i--;
-                    }
-                }
+        for (int i = charArray.length-1; i > 0; i--) {
+            if (charArray[i][0] == '.') continue;
+            for (int j = 0; j < i; j++) {
+                if (charArray[j].length < charArray[i])
             }
         }
-
-        for (int i = 0; i < correctSize.length(); i++) {
-            if (correctSize.charAt(i) != '.') {
-                answer += trackIdIndex.get(i).longValue() * i;
-            }
-        }
-        System.out.println(correctSize);
         return answer;
     }
 
@@ -183,7 +146,7 @@ public class Main {
                                     if (collisions.get((guardLine - 1) + "," + guardIndex).contains("up")) {
                                         collision = true;
                                     } else {
-                                        collisions.put((guardLine - 1) + "," + guardIndex, collisions.get((guardLine - 1) + "," + guardIndex)+" up");
+                                        collisions.put((guardLine - 1) + "," + guardIndex, collisions.get((guardLine - 1) + "," + guardIndex) + " up");
                                     }
                                 } else {
                                     collisions.put((guardLine - 1) + "," + guardIndex, "up");
@@ -206,7 +169,7 @@ public class Main {
                                     if (collisions.get(guardLine + "," + (guardIndex + 1)).contains("right")) {
                                         collision = true;
                                     } else {
-                                        collisions.put(guardLine + "," + (guardIndex + 1), collisions.get(guardLine + "," + (guardIndex + 1))+" right");
+                                        collisions.put(guardLine + "," + (guardIndex + 1), collisions.get(guardLine + "," + (guardIndex + 1)) + " right");
                                     }
                                 } else {
                                     collisions.put(guardLine + "," + (guardIndex + 1), "right");
@@ -229,7 +192,7 @@ public class Main {
                                     if (collisions.get((guardLine + 1) + "," + guardIndex).contains("down")) {
                                         collision = true;
                                     } else {
-                                        collisions.put((guardLine + 1) + "," + guardIndex, collisions.get((guardLine + 1) + "," + guardIndex)+" down");
+                                        collisions.put((guardLine + 1) + "," + guardIndex, collisions.get((guardLine + 1) + "," + guardIndex) + " down");
                                     }
                                 } else {
                                     collisions.put((guardLine + 1) + "," + guardIndex, "down");
@@ -252,7 +215,7 @@ public class Main {
                                     if (collisions.get(guardLine + "," + (guardIndex - 1)).contains("left")) {
                                         collision = true;
                                     } else {
-                                        collisions.put(guardLine + "," + (guardIndex - 1), collisions.get(guardLine + "," + (guardIndex - 1))+" left");
+                                        collisions.put(guardLine + "," + (guardIndex - 1), collisions.get(guardLine + "," + (guardIndex - 1)) + " left");
                                     }
                                 } else {
                                     collisions.put(guardLine + "," + (guardIndex - 1), "left");
